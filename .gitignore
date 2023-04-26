@@ -73,6 +73,7 @@ instance/
 
 # Scrapy stuff:
 .scrapy
+*.out
 
 # Sphinx documentation
 docs/_build/
