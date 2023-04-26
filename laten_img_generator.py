@@ -40,7 +40,7 @@ import os
 
 # specify the img directory path
 path = "/home/rbasiri/Dataset/GAN/test/DFU/"
-savepath = "/home/rbasiri/Dataset/GAN/test/DFU/latent"
+savepath = "/home/rbasiri/Dataset/GAN/test/DFU/latenpic"
 
 # list files in img directory
 files = os.listdir(path)
@@ -52,9 +52,12 @@ for file in files:
 
         # load file as image...
         img = load_image(img_path)
-        latent_img = pil_to_latents(img)
-        latent_save_path = os.path.join(savepath, file[:-4]+'.npy')
-        np.save(latent_save_path, latent_img.cpu().detach().numpy())
+        latent = pil_to_latents(img)
+        latent_img = latents_to_pil(latent)
+        # latent_save_path = os.path.join(savepath, file[:-4]+'.npy')
+        # np.save(latent_save_path, latent.cpu().detach().numpy())
+        latent_save_path = os.path.join(savepath, file[:-4]+'.jpg')
+        latent_img.save(latent_save_path)
 
 # latent_save_path = os.path.join(test_opts.exp_dir, 'latent_code_%05d.npy'%global_i)
 # latent_save_path = os.path.join(savepath, 'test.npy')
