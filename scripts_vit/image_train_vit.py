@@ -72,7 +72,7 @@ def build_model(**kwargs):
 #     lr_anneal_steps=0
 #     mse_loss_weight_type="min_snr_5"
 #     clip_norm=-1
-#     in_chans=4
+#     in_chans=3
 #     drop_label_prob=0.15
 # # args = TrainingConfig()
 
