@@ -591,6 +591,21 @@ def vit_large_patch4_64(pretrained=False, **kwargs):
     return model
 
 
+# @register_model
+# def vit_xl_patch2_32(pretrained=False, **kwargs):
+#     new_kwargs = deepcopy(kwargs)
+#     for key in ['img_size', 'patch_size', 'embed_dim', 'num_heads', 'mlp_ratio', 'qkv_bias', 'norm_layer']:
+#         if key in new_kwargs:
+#             new_kwargs.pop(key)
+#     if not kwargs['class_cond']:
+#         new_kwargs['num_classes'] = -1
+#     model = VisionTransformer(
+#         img_size=32,
+#         patch_size=2, embed_dim=1152, num_heads=16, mlp_ratio=4, qkv_bias=True,
+#         norm_layer=partial(nn.LayerNorm, eps=1e-6), **new_kwargs)
+#     model.default_cfg = _cfg()
+#     return model
+
 @register_model
 def vit_xl_patch2_32(pretrained=False, **kwargs):
     new_kwargs = deepcopy(kwargs)
@@ -600,8 +615,8 @@ def vit_xl_patch2_32(pretrained=False, **kwargs):
     if not kwargs['class_cond']:
         new_kwargs['num_classes'] = -1
     model = VisionTransformer(
-        img_size=32,
-        patch_size=2, embed_dim=1152, num_heads=16, mlp_ratio=4, qkv_bias=True,
+        img_size=128,
+        patch_size=8, embed_dim=1024, num_heads=8, mlp_ratio=4., qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6), **new_kwargs)
     model.default_cfg = _cfg()
     return model

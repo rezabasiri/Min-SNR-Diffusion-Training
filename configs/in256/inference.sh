@@ -22,28 +22,29 @@ fi
 export NCCL_DEBUG=WARN
 
 GPUS=1
-IMG_SIZE=32
-BATCH_SIZE=32
+IMG_SIZE=128
+BATCH_SIZE=12
 NUM_SAMPLES=10
-MODEL_NAME="vit_base_patch2_32"
-DEPTH=12
-GUIDANCE_SCALES="1.5"
-STEPS="50"
+MODEL_NAME="vit_xl_patch2_32"  # #"vit_large_patch4_64" #
+DEPTH=24
+GUIDANCE_SCALES="0"
+STEPS="1000"
 PRED_X0=True
+NUM_InChanl=3
+NameTag='128ema_0.9999_120000'
+# --data_dir '/home/rbasiri/Dataset/GAN/train_foot/train/'
 
-
-CKPT="/home/rbasiri/Dataset/saved_models/Diffusion/exp/guided_diffusion/vit-b_layer12_lr1e-4_099_099_pred_x0__min_snr_5__fp16_bs_FOOT_1stRun/ema_0.9999_188000.pt"
-
-# if [ -e $CKPT ]; then
-#     echo "$CKPT exists."
-# else
-#     echo "$$CKPT does not exist.";
-#     sudo mkdir -p exp/guided_diffusion/;
-#     sudo wget https://github.com/TiankaiHang/Min-SNR-Diffusion-Training/releases/download/v0.0.0/ema_0.9999_xl.pt -O $CKPT;
-# fi
+CKPT="/home/rbasiri/Dataset/saved_models/Diffusion/exp/guided_diffusion/vit_layer24_Dsteps2000_128_FOOT_3stRun/ema_0.9999_120000.pt"
+FID_DIR="/home/rbasiri/Dataset/GAN/train_footFID/train_foot.npz"
 MODEL_BLOB="/home/rbasiri/Dataset/saved_models/Diffusion"
 
-MODEL_FLAGS="--class_cond True --image_size $IMG_SIZE --model_name ${MODEL_NAME} --depth $DEPTH --in_chans 3 --predict_xstart $PRED_X0 "
+MODEL_FLAGS="--class_cond False --image_size $IMG_SIZE --model_name ${MODEL_NAME} --depth $DEPTH --predict_xstart $PRED_X0 \
+--schedule_sampler 'uniform' --lr 0.0001 --weight_decay 0.03 --lr_anneal_steps 0 --microbatch -1 --ema_rate '0.9999' \
+--log_interval 500 --save_interval 10000 --use_fp16 False --fp16_scale_growth 0.001 --use_wandb False \
+--drop_path_rate 0.0 --use_conv_last False --use_shared_rel_pos_bias False --warmup_steps 0 --lr_final 1e-05 --drop_label_prob 0.15 \
+--use_rel_pos_bias False --in_chans $NUM_InChanl --num_channels 128 --num_res_blocks 2 --num_heads 4 --num_heads_upsample -1 --attention_resolutions 16,8 --num_head_channels -1 \
+--dropout 0.2 --use_checkpoint False --use_scale_shift_norm True --resblock_updown False --use_new_attention_order False --learn_sigma False \
+--use_kl False --mse_loss_weight_type 'min_snr_5'"
 DIFFUSION_FLAGS="--diffusion_steps 1000 --noise_schedule cosine --rescale_learned_sigmas False --rescale_timesteps False"
 
 # ----------- scale loop ------------- #
@@ -55,12 +56,12 @@ do
 
 SAMPLE_FLAGS="--batch_size $BATCH_SIZE --num_samples ${NUM_SAMPLES} --steps $STEP --guidance_scale $GUIDANCE_SCALE"
 
-OPENAI_LOGDIR="${MODEL_BLOB}/exp/guided_diffusion/xl_samples${NUM_SAMPLES}_step${STEP}_scale${GUIDANCE_SCALE}"
+OPENAI_LOGDIR="${MODEL_BLOB}/exp/guided_diffusion/xl_samples${NUM_SAMPLES}_step${STEP}_scale${GUIDANCE_SCALE}_tag${NameTag}"
 mkdir -p $OPENAI_LOGDIR
 OPENAI_LOGDIR=$OPENAI_LOGDIR torchrun --nproc_per_node=$GPUS --master_port=23456 scripts_vit/sampler_edm.py --model_path $CKPT $MODEL_FLAGS $DIFFUSION_FLAGS $SAMPLE_FLAGS
 
 cd edm
-torchrun --standalone --nproc_per_node=$GPUS fid.py calc --images=../$OPENAI_LOGDIR --ref=https://openaipublic.blob.core.windows.net/diffusion/jul-2021/ref_batches/imagenet/256/VIRTUAL_imagenet256_labeled.npz --num $NUM_SAMPLES 
+torchrun --standalone --nproc_per_node=$GPUS fid.py calc --images=$OPENAI_LOGDIR --ref=$FID_DIR --num $NUM_SAMPLES 
 cd ..
 
 done
@@ -68,7 +69,6 @@ done
 # ----------- scale loop ------------- #
 
 echo "----> DONE <----"
-
 
 # -----------------------------------
 #          expected output
